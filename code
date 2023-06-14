@@ -1,0 +1,96 @@
+package parking
+
+fun main() {
+    val lot: ParkingLot
+    while(true) {
+        val completeCommand = readln().split(" ")
+        if(completeCommand[0] == "exit") {
+            return
+        } else if(completeCommand[0] != "create") {
+            println("Sorry, a parking lot has not been created.")
+        } else {
+            lot = ParkingLot(completeCommand[1].toInt())
+            println("Created a parking lot with ${completeCommand[1]} spots.")
+            lot.instruction()
+            return
+        }
+    }
+}
+
+class ParkingLot(spots: Int) {
+    private var freeSpace = (1..spots).toMutableList()
+    private var parkedCars = mutableMapOf<Int, Pair<String, String>>()
+
+    fun instruction() {
+        while(true) {
+            val completeCommand = readln().split(" ")
+            when (completeCommand[0]) {
+                "park" -> {
+                    park(completeCommand[1], completeCommand[2])
+                }
+                "leave" -> {
+                    leave(completeCommand[1].toInt())
+                }
+                "status" -> {
+                    status()
+                }
+                "create" -> {
+                    freeSpace = (1..completeCommand[1].toInt()).toMutableList()
+                    parkedCars.clear()
+                    println("Created a parking lot with ${completeCommand[1]} spots.")
+                }
+                "reg_by_color" -> {
+                    var matchedCarList = mutableListOf<String>()
+                    for((key, value) in parkedCars.toSortedMap()) {
+                        if(value.second.lowercase() == completeCommand[1].lowercase()) matchedCarList.add(value.first)
+                    }
+                    if(matchedCarList.isEmpty()) println("No cars with color ${completeCommand[1]} were found.") else println(matchedCarList.joinToString(", "))
+                }
+                "spot_by_color" -> {
+                    var matchedCarsList = mutableListOf<Int>()
+                    for((key, value) in parkedCars.toSortedMap()) {
+                        if(value.second.lowercase() == completeCommand[1].lowercase()) matchedCarsList.add(key)
+                    }
+                    if(matchedCarsList.isEmpty()) println("No cars with color ${completeCommand[1]} were found.") else println(matchedCarsList.joinToString(", "))
+                }
+                "spot_by_reg" -> {
+                    val result = parkedCars.values.find { it.first == completeCommand[1] }
+                    when(result) {
+                        null -> println("No cars with registration number ${completeCommand[1]} were found.")
+                        else -> println(parkedCars.entries.first { it.value == result }.key)
+                    }
+                }
+                else -> {
+                    return
+                }
+            }
+        }
+    }
+    private fun status() {
+        if(parkedCars.isEmpty()) {
+            println("Parking lot is empty.")
+        } else {
+            for((key, value) in parkedCars.toSortedMap()) {
+                println("$key ${value.first} ${value.second}")
+            }
+        }
+    }
+
+    private fun park(license: String, color: String) {
+        val avaSpaceLowest = freeSpace.minOrNull()
+        if(avaSpaceLowest == null) {
+            println("Sorry, the parking lot is full.")
+        } else {
+            parkedCars[avaSpaceLowest] = Pair(license, color)
+            println("$color car parked in spot ${avaSpaceLowest}.")
+            freeSpace.remove(avaSpaceLowest)
+        }
+    }
+
+    private fun leave(spot: Int) {
+        println("Spot $spot is free.")
+        freeSpace.add(spot)
+        parkedCars.remove(spot)
+    }
+
+}
